@@ -24,6 +24,11 @@ body {
   line-height: 1.75rem;
 }
 
+
+
+
+
+
 @media (max-width: 30em) {
   body {
     font-size: 14px;
@@ -63,6 +68,10 @@ img {
   border-radius: 5px;
 }
 
+.img-example {
+  width: 35%;
+}
+
 blockquote {
   margin: 10px 20px 10px;
   padding: 0px 15px;
@@ -82,8 +91,48 @@ hr {
 .container {
   margin-left: auto;
   margin-right: auto;
-  width: 615px;
+  width: 680px;
 }
+
+
+#highlight {
+  background-color: #f0b6ff;
+}
+
+.marker_underline {
+  position: relative;
+}
+
+.marker_underline::after {
+  content: '';
+  background-image: url('/assets/img/underline.svg');
+  position: absolute;
+  bottom: -0.155rem;
+  left: -0.25rem;
+  right: -0.25rem;
+  height: 0.55rem;
+  z-index: -1;
+  background-image: url('/assets/img/underline.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+
+var.vector {
+  font-style : normal;
+  position: relative;
+}
+var.vector span {
+ /*  margin-left: -.5em;   /* shift the arrow back over the letter */
+  vertical-align : .3em; /* tune the arrow vertical position */
+  bottom: 2rem;
+  left: 0rem;
+  right: -0.25rem;
+  height: 0.55rem;
+  z-index: -1;
+  position: absolute;
+}
+
 
 /*48em*/
 
