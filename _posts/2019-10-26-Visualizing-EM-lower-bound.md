@@ -4,7 +4,7 @@ title: "Visualizing EM lower bound updates"
 date: 2019-10-26
 ---
 
-Let's start by a short recap. <span class="marker_underline"><strong>Expectation-Maximization</strong></span> is <span class="marker_underline">an iterative</span> <span class="marker_underline">method</span> <span class="marker_underline">that</span> <span class="marker_underline">performs</span> <span class="marker_underline">clustering</span>. EM maximizes data likelihood by updating current model's parameters with a sequence of E and M steps. What happens during E-steps and M-steps?
+Let's start with a short recap. <span class="marker_underline"><strong>Expectation-Maximization</strong></span> is <span class="marker_underline">an iterative</span> <span class="marker_underline">method</span> <span class="marker_underline">that</span> <span class="marker_underline">performs</span> <span class="marker_underline">clustering</span>. EM maximizes data likelihood by updating current model's parameters with a sequence of E and M steps. What happens during E-steps and M-steps?
 
 <span id="highlight">From practical perspective</span>:
 * <strong>E-step</strong>: measure "how much" every data point belongs to each of the clusters, assign a responsibility vector based on that.
@@ -99,7 +99,7 @@ plt.scatter(x, np.zeros((x.shape[0])), color='black', s=12, marker='o')
 ![png](/../assets/notebooks/EM/output_23_1.png)
 
 <br/>
-<strong><span class='underline_magical'>Step 2: plotting data log-likelihood</span></strong>. Data log-likelihood shows how probable it is to obtain the given data under current model parameters. <b><i>The goal of EM algorithm is to maximize data log-likelihood</i></b>:
+<span class='underline_magical'><strong>Step 2: plotting data log-likelihood</strong></span>. Data log-likelihood shows how probable it is to obtain the given data under current model parameters. <b><i>The goal of EM algorithm is to maximize data log-likelihood</i></b>:
 
 $$l(\theta) =  \log p(X | \theta) = \sum_{i} \log p(x_i | \theta) \rightarrow \max_{\theta}$$
 
@@ -122,7 +122,7 @@ $$ p(x_i, z_i | \theta) = N(x_i | \theta_{z_i}) $$
 Let's compute data log-likelihood under current model:
 
 ```python
-# let's calculate data log-likelihood
+# here we calculate data log-likelihood
 N1 = scipy.stats.norm(u[0], sigma[0])
 N2 = scipy.stats.norm(u[1], sigma[1])
 
@@ -187,8 +187,19 @@ Since we were only varying one parameter at a time, it's very hard to find optim
 
 Let's perform series of EM updates.
 
+<br/>
+<br/>
+<span class='underline_magical'><strong>Step 3: E update</strong></span>. We perform E-step by assigning each point $x_i$ its responsibility vector
+$$\begin{bmatrix} r_{i1} \\ r_{i2} \end{bmatrix}$$
+, where $r_{ij}$ are probabilities that the corresponding point comes from Gaussian $j$.
+
+In our example:
+
+$$ r_{i1}  = \frac{\pi_1 \cdot N(x_i | \theta_1)}{\pi_1 \cdot N(x_i | \theta_1) + \pi_2 \cdot N(x_i | \theta_2)}$$
+
+$r_{i2}$ calculation is analogous. Let's code this equation:
+
 ```python
-# let's perform series of EM updates
 # here we do E-step: find responsibilities for each data point in x
 N1 = scipy.stats.norm(u[0], sigma[0])
 N2 = scipy.stats.norm(u[1], sigma[1])
@@ -200,21 +211,7 @@ for i, point in enumerate(x):
     R[i,1] = pi[1]*N2.pdf(x[i]) / ( pi[0]*N1.pdf(x[i])+pi[1]*N2.pdf(x[i]) )
 ```
 
-
-```python
-R[:5]
-```
-
-
-
-
-    array([[9.99998070e-01, 1.93006863e-06],
-           [9.99969727e-01, 3.02726751e-05],
-           [9.99986411e-01, 1.35894752e-05],
-           [9.93786287e-01, 6.21371344e-03],
-           [9.79203900e-01, 2.07961004e-02]])
-
-
+To visualize how responsibilities were assigned, let's color each point to the color of its highest responsibility Gaussian. So, if for the first point $ r_{11} < r_{12}$ we will color it orange (as the second Gaussian).
 
 
 ```python
@@ -241,12 +238,10 @@ for mu, s in zip(u, sigma):
 
 
 
-```python
-# the picture above makes a lot of sense!
-# point get colored based on which Gaussian is more likely
-# to produce it (i.e. which PDF is higher at that point)
-```
+The picture above makes a lot of sense! Every point get colored based on which Gaussian is more likely to produce it (i.e. which PDF is higher at that point).
 
+<br/>
+<span class='underline_magical'><strong>Step 4: M update</strong></span>. We perform M-step by updating parameters of each Gaussian using each point's responsibility information from E-step. First we will save old parameter values (we will need them for our plots soon!).
 
 ```python
 # now we are moving to M-step, where we update the parameters
@@ -256,20 +251,16 @@ sigma_old = sigma
 pi_old = pi
 ```
 
+Equations for M-step updates are the following:
 
-```python
-print("u_old =", u_old)
-print("sigma_old =", sigma_old)
-print("pi_old =", pi_old)
-```
+$$ \pi_j = \frac{1}{N}\sum_{i}r_{ij}$$
 
-    u_old = [[0.08000243]
-     [1.14667988]]
-    sigma_old = [0.2 0.2]
-    pi_old = [0.5 0.5]
+$$ \mu_j = \frac{ \sum_{i}r_{ij}x_i }{ \sum_{i}r_{ij} }$$
+
+$$ \sigma_j^2 = \frac{ \sum_{i}r_{ij}(x_i-\mu_j)^2 }{ \sum_{i}r_{ij} }$$
 
 
-
+We can get updated parameter values by using these equations:
 ```python
 # now let's perform M-step: update parameter values
 # using responsibilities from E-step
@@ -284,60 +275,110 @@ for i in range(2):
     sigma[i] = np.dot(R[:,i],(x-u[i])**2) / np.sum(R[:,i])
 ```
 
+Now let's look at our new Gaussians' PDFs
 
 ```python
-print("u =", u)
-print("sigma =", sigma)
-print("pi =", pi)
-```
-
-    u = [0.04605771 1.90954782]
-    sigma = [0.11591768 0.13470239]
-    pi = [0.46300247 0.53699753]
-
-
-
-```python
-# let's plot our new Gaussians and points
+# plot new Gaussians
 points = np.linspace(-1, 3, 1000)
 plt.rcParams['figure.figsize']=(9,3)
 
 for mu, s in zip(u, sigma):
     plt.plot(points, stats.norm.pdf(points, mu, s))
 
+# plot points
 plt.scatter(x, np.zeros((x.shape[0])), color='black', s=12, marker='o')
 ```
 
-
-
-
-    <matplotlib.collections.PathCollection at 0x113058a20>
-
-
-
-
 ![png](/../assets/notebooks/EM/output_38_1.png)
 
+Great! It's clear that new model explains our data much better.
 
+But let's get back to the equations and understand why did we get those equations for E-step and M-step.
+
+<br/>
+<span class='underline_magical'><strong>Step 5: understanding EM updates from theoretical perspective</strong></span>.
+
+<strong>Why do we break the optimization process into E and M steps?</strong> As we learnt before, the goal of EM algorithm is to maximize data log-likelihood by optimizing model's parameters:
+
+$$l(\theta) =  \sum_{i} \log p(x_i | \theta) = \sum_{i} \log \sum_{z_i} p(x_i, z_i | \theta) \rightarrow \max_{\theta} $$
+
+However, because we introduced latent variable $z_i$ and marginalized $l(\theta)$, now we have summation inside the log function. This makes it very hard to optimize data log-likelihood directly...
+
+What can we do? <span id="highlight">We can find some approximation for $l(\theta)$ that doesn't have a sum inside log and try to optimize that function</span>. To get rid of the log inside the sum we will use <strong>Jensen's inequality</strong>, which allows us to swap log and summation:
+
+In case of a <u>concave</u> function $g$ (like log function)
+
+$$ \mathbb{E}[g(X)] \leqslant	g(\mathbb{E}[X]) $$
+
+We can rewrite this equation for the log function case:
+
+$$ \sum_{i}p(y_i)\log(y_i) \leqslant	\log(\sum_{i}p(y_i)y_i) $$
+
+Then we can introduce some probability distribution $Q_i(z_i)$ as $p(y_i)$ and plug in rest of variables under log into $y_i$ to get lower bound estimate for $l(\theta)$:
+
+$$ l(\theta) = \sum_{i} \log \sum_{z_i} p(x_i, z_i | \theta) = \sum_{i} \log \sum_{z_i} Q_i(z_i) \frac{p(x_i, z_i | \theta)}{Q_i(z_i)} \\
+\geqslant \sum_{i} \sum_{z_i} Q_i(z_i) \log \frac{p(x_i, z_i | \theta)}{Q_i(z_i)} $$  
+
+We want inequality to turn into equality, according to Jensen's inequality this happens when:
+
+$$ \frac{p(x_i, z_i | \theta)}{Q_i(z_i)} = const $$  
+
+So we pick
+$Q_i(z_i) \propto	p(x_i, z_i | \theta)$:
+
+
+$$ Q_i(z_i) =  \frac{p(x_i, z_i | \theta)}{ \sum_{j} p(x_i, z_j | \theta) } = \frac{p(x_i, z_i | \theta)}{ p(x_i | \theta) }  = p(z_i | x_i, \theta)$$
+
+In our case,
+$p(z_i | x_i, \theta)$
+are the responsibilities of each data point. The <strong>lower bound estimate takes the following form</strong>:
+
+$$\mathcal{L}(q, \theta) = \sum_{i} \sum_{z_i} Q_i(z_i) \log \frac{p(x_i, z_i | \theta)}{Q_i(z_i)} =
+ \sum_{i} \sum_{z_i} p(z_i | x_i, \theta_{old}) \log \frac{p(x_i, z_i | \theta)}{p(z_i | x_i, \theta_{old})}  $$
+
+At <strong>E-step</strong> we are fixing $Q_i(z_i)$ at our current parameter values to
+$p(z_i | x_i, \theta_{old})$
+to get lower bound estimate.
+
+At <strong>M-step</strong> we are updating
+$p(x_i, z_i | \theta)$
+by updating $\theta$ to get maximal value of the lower bound.
+
+Now we understand the illustration from the beginning of this post:
+<br/>
+<img src="/assets/img/EM/bishop_EM.jpeg" width="50%" style="align:center">
+* we cannot optimize data log-likehood directly (red plot)
+* so we construct a lower bound estimate $\mathcal{L(q, \theta)}$ (blue plot)
+* $\mathcal{L(q, \theta)}$ is equal to log-likehood at  $\theta_{old}$
+* then we find new parameters $\theta_{new}$ that maximize $\mathcal{L}(q, \theta)$
+
+How can we get this plot from our data?
+
+<br/>
+<span class='underline_magical'><strong>Step 6: plotting data log-likelihood and lower bound updates from real data</strong></span>
+
+Let's code lower bound equation and see if it's equals to data log-likelihood at our old parameter values.
 
 ```python
-# we can see that new Gaussians model the data much better!
-```
+# code for lower bound
+N1 = scipy.stats.norm(u_old[0], sigma_old[0])
+N2 = scipy.stats.norm(u_old[1], sigma_old[1])
 
-
-```python
-# let's see what happened to data-log likelihood and lower bound
-#
-
-N1 = scipy.stats.norm(u[0], sigma[0])
-N2 = scipy.stats.norm(u[1], sigma[1])
-
-lower_bound = np.empty(x.shape[0])
+lower_bound = 0
 for i, point in enumerate(x):
-    lower_bound += R[i,0]*np.log(pi[0]*N1.pdf(x[i])/R[i,0]) + \
-                      R[i,1]*np.log(pi[1]*N2.pdf(x[i])/R[i,1] )
+    lower_bound += R[i,0]*np.log(pi_old[0]*N1.pdf(x[i])/R[i,0]) + \
+                   R[i,1]*np.log(pi_old[1]*N2.pdf(x[i])/R[i,1] )
 
+print("lower_bound = ", lower_bound)
+log_likelihood = get_log_likelihood(x, u_old, sigma_old, pi_old)
+print("log_likelihood = ", log_likelihood)
 ```
+
+    lower_bound    =  [-546.82680207]
+    log_likelihood =  [-546.82680207]
+
+
+Perfect match! Now let's code lower bound equation into a function:
 
 
 ```python
@@ -345,58 +386,36 @@ def get_lower_bound(x_arr, u_arr, sigma_arr, pi_arr, R):
     N1 = scipy.stats.norm(u_arr[0], sigma_arr[0])
     N2 = scipy.stats.norm(u_arr[1], sigma_arr[1])
 
-    lower_bound = np.empty(100) # because we are varying 100 values for one of the Gaussian parameters
+    # make it into array because we will be varying 100 values
+    # for one of the Gaussian parameters
+    lower_bound = np.empty(100)
     for i, point in enumerate(x_arr):
-        #log_likelihood += np.log(pi_arr[0]*N1.pdf(x_arr[i])+pi_arr[1]*N2.pdf(x_arr[i]))
+
+        # to avoid numerical overflow in case of small values
         if (R[i,1]<0.0001):
             lower_bound += R[i,0]*np.log(pi_arr[0]*N1.pdf(x_arr[i])/R[i,0])
-
         elif (R[i,0]<0.0001):
             lower_bound += R[i,1]*np.log(pi_arr[1]*N2.pdf(x_arr[i])/R[i,1] )
 
+        # standard case
         else:
-
-            lower_bound += R[i,0]*np.log(pi_arr[0]*N1.pdf(x_arr[i])/R[i,0]) + R[i,1]*np.log(pi_arr[1]*N2.pdf(x_arr[i])/R[i,1] )
+            lower_bound += R[i,0]*np.log(pi_arr[0]*N1.pdf(x_arr[i])/R[i,0]) + \
+                           R[i,1]*np.log(pi_arr[1]*N2.pdf(x_arr[i])/R[i,1])
 
     return lower_bound
 ```
 
+Now we can <span class="marker_underline">plot lower bound estimate</span>. We do it by fixing all parameters except for the one that we decide to vary (in this case mean of the second Gaussian):
 
 ```python
-R[i,0]*np.log(pi[0]*N1.pdf(x[i])/R[i,0]) + R[i,1]*np.log(pi[1]*N2.pdf(x[i])/R[i,1])
-```
-
-
-
-
-    0.4585876544713585
-
-
-
-
-```python
-print('u_old=',u_old,' u_new=', u[0])
 mu = np.linspace(-2, 5, 100)
 plt.plot(mu, get_lower_bound(x, np.array((u_old[0], mu)), sigma, pi, R), '--', color='salmon')
 ```
 
-    u_old= [[0.08000243]
-     [1.14667988]]  u_new= 0.04605771482846506
-
-
-
-
-
-    [<matplotlib.lines.Line2D at 0x1131424a8>]
-
-
-
-
 ![png](/../assets/notebooks/EM/output_43_2.png)
 
 
-
-
+<strong>Let's plot data log-likelihood and lower bound functions</strong> together on one plot. Again, we fix all parameters except for $\mu_2$ that we use as an argument of those functions. Also, let's plot $\mu_2$ initial value and its value after update together with $l(\mu_2)$ and $\mathcal{L}(\mu_2)$.
 
 
 ```python
@@ -427,17 +446,17 @@ plt.scatter(mu_max, max_l, color='black', marker='x', s=64, zorder=10)
 plt.scatter(u[1], new_l, color='red', marker='x', s=64, zorder=10)
 ```
 
-
-
-
-    <matplotlib.collections.PathCollection at 0x112f21b38>
-
-
-
-
 ![png](/../assets/notebooks/EM/output_45_1.png)
 
+We've done it!
 
+Solid pink plot is data log-likelihood, dashed plot is lower bound estimate.
+
+Look how initial $\mu_2$ value (left black cross) was optimized (red cross) to get maximum of the lower bound estimate (right black cross).
+
+
+<br/>
+We can also plot log-likelihood and lower bound functions before and after parameter update.
 
 ```python
 # now let's add to our plot updated lower bound and log-likelihood functions
@@ -459,11 +478,6 @@ plt.ylabel('Data log-likelihood')
 ```
 
 
-
-
-    Text(0, 0.5, 'Data log-likelihood')
-
-
-
-
 ![png](/../assets/notebooks/EM/output_46_1.png)
+
+The end :) thanks for reading!
