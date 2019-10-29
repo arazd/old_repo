@@ -342,7 +342,7 @@ to get lower bound estimate.
 
 At <strong>M-step</strong> we are updating
 $p(x_i, z_i | \theta)$
-by updating $\theta$ to get maximal value of the lower bound.
+by updating $\theta$ to get maximal value of the lower bound. We find optimal values for each model parameter $\theta_j$ by setting derivatives $\frac{\partial \mathcal{L}(\theta_j)}{\partial \theta_j}=0$.
 
 Now we understand the illustration from the beginning of this post:
 <br/>
