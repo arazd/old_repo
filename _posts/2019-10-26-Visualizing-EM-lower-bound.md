@@ -133,7 +133,7 @@ for i, point in enumerate(x):
 print('log_likelihood = ', log_likelihood)
 ```
 
-    log_likelihood =  [-546.82680207]
+    log_likelihood =  [-1305.22477413]
 
 
 Now we can try to change one of the model's parameters and see how it affects data log-likelihood. Let's try changing mean of the second Gaussian and plot $l(\mu_2)$ with all other parameters being fixed.
