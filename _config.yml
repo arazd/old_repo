@@ -1,4 +1,9 @@
 name: araZd
 markdown: kramdown
 highlighter: rouge
+
+# jekyll-paginate configuration
+paginate: 5
+plugins: [jekyll-paginate, jekyll-feed, jekyll-seo-tag]
+
 permalink: /blog/:year/:month/:day/:title
