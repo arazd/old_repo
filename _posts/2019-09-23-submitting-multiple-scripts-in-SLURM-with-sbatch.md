@@ -2,6 +2,8 @@
 layout: post
 title: "Submitting multiple scripts in SLURM with sbatch"
 date: 2019-09-23
+tags: shell slurm
+image: school-of-fish.jpg
 ---
 
 In this short tutorial I will show how to *submit multiple programs as a single SLURM job*. Often we don't want to submit several similar jobs separately, so we want to join them and submit as one job using **sbatch**. We can make programs inside the job run:

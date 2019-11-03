@@ -2,6 +2,8 @@
 layout: post
 title: "EM algorithm explained by examples"
 date: 2019-10-07
+tags: maths theory
+image: galaxies.jpg
 ---
 
 In this post I want to give an intuitive explanation of <span id="highlight">Expectation-Maximization (EM) algorithm</span>. Let's start by looking at

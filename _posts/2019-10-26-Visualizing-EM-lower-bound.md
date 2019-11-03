@@ -2,6 +2,8 @@
 layout: post
 title: "Visualizing EM lower bound updates"
 date: 2019-10-26
+tags: maths theory code ipython
+image: surfing2.jpg
 ---
 
 Let's start with a short recap. <span class="marker_underline"><strong>Expectation-Maximization</strong></span> is <span class="marker_underline">an iterative</span> <span class="marker_underline">method</span> <span class="marker_underline">that</span> <span class="marker_underline">performs</span> <span class="marker_underline">clustering</span>. EM maximizes data likelihood by updating current model's parameters with a sequence of E and M steps. What happens during E-steps and M-steps?
@@ -479,5 +481,7 @@ plt.ylabel('Data log-likelihood')
 
 
 ![png](/../assets/notebooks/EM/output_9.png)
+
+You can find the full code + Jupyter notebook for this tutorial <a href='https://github.com/arazd/Visualizing-EM'>at the github repository</a>.
 
 The end :) thanks for reading!
